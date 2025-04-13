@@ -9,8 +9,8 @@ let project = Project(
             product: .app,
             bundleId: "io.tuist.GitTrack",
             infoPlist: .default,
-            sources: ["GitTrack/Sources/**"],
-            resources: ["GitTrack/Resources/**"],
+            sources: ["App/Sources/**"],
+            resources: ["App/Resources/**"],
             dependencies: []
         ),
         .target(
@@ -19,7 +19,7 @@ let project = Project(
             product: .unitTests,
             bundleId: "io.tuist.GitTrackTests",
             infoPlist: .default,
-            sources: ["GitTrack/Tests/**"],
+            sources: ["App/Tests/**"],
             resources: [],
             dependencies: [.target(name: "GitTrack")]
         ),
