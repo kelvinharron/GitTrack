@@ -8,11 +8,13 @@ let project = Project(
             destinations: .macOS,
             product: .app,
             bundleId: "io.tuist.GitTrack",
-            infoPlist: .default,
+            infoPlist: .extendingDefault(with:
+                ["LSUIElement": "YES"]
+            ),
             sources: ["App/Sources/**"],
             resources: ["App/Resources/**"],
             dependencies: [
-                .external(name: "MarkdownUI")
+                .external(name: "MarkdownUI"),
             ]
         ),
         .target(
