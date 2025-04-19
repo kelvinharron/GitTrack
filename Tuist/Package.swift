@@ -15,8 +15,6 @@ import PackageDescription
 let package = Package(
     name: "GitTrack",
     dependencies: [
-        // Add your own dependencies here:
-        // .package(url: "https://github.com/Alamofire/Alamofire", from: "5.0.0"),
-        // You can read more about dependencies here: https://docs.tuist.io/documentation/tuist/dependencies
+        .package(url: "https://github.com/gonzalezreal/swift-markdown-ui", exact: "2.4.1")
     ]
 )

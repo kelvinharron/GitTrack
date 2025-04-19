@@ -1,4 +1,5 @@
 import SwiftUI
+import MarkdownUI
 
 struct ContentView: View {
     @State private var personalAccessToken = ""
@@ -9,18 +10,27 @@ struct ContentView: View {
     var body: some View {
         VStack {
             List(releases, id: \.id) { release in
-                Text(release.name)
-                    .font(.headline)
-                Text(release.body ?? "")
-                    .font(.body)
-    
+                HStack {
+                    Text(release.name)
+                        .font(.headline)
+                    Spacer()
+                    Text(release.createdAt.formatted())
+                        .font(.callout)
+                }
+                if let releaseText = release.body {
+                    Markdown(releaseText)
+                }
             }
             TextField("Paste your PAT", text: $personalAccessToken)
 
             Button("Make a request") {
                 Task {
                     do {
-                        let releases = try await apiClient.fetchReleases(owner: "tuist", repo: "tuist", token: personalAccessToken)
+                        let releases = try await apiClient.fetchReleases(
+                            owner: "tuist",
+                            repo: "tuist",
+                            token: personalAccessToken
+                        )
                         await MainActor.run {
                             self.releases = releases
                         }

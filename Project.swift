@@ -11,7 +11,9 @@ let project = Project(
             infoPlist: .default,
             sources: ["App/Sources/**"],
             resources: ["App/Resources/**"],
-            dependencies: []
+            dependencies: [
+                .external(name: "MarkdownUI")
+            ]
         ),
         .target(
             name: "GitTrackTests",
