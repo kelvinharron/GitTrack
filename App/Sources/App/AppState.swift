@@ -10,5 +10,7 @@ import Observation
 
 @Observable
 final class AppState {
-    var isAuthenticated = false // pull from keychain
+    var isAuthenticated: Bool {
+        false
+    }
 }

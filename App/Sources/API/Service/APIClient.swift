@@ -9,7 +9,7 @@ import Foundation
 import OSLog
 
 enum APIError: Error, CustomStringConvertible {
-    case failedToBuildRequest(owner: String, repo: String)
+    case failedToBuildRequest(Endpoint)
     case decodeError
     case authError
     case responseError
@@ -19,8 +19,8 @@ enum APIError: Error, CustomStringConvertible {
     //TODO: improve error handling
     var description: String {
         switch self {
-        case .failedToBuildRequest(let owner, let repo):
-            "Failed to build request for owner: \(owner), repo: \(repo)"
+        case .failedToBuildRequest(let endPoint):
+            "Failed to build request for endpoint: \(endPoint.rawValue)"
         case .decodeError:
             "Failed to decode response"
         case .authError:

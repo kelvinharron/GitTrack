@@ -10,24 +10,32 @@ import Foundation
 protocol GitHubAPIClientType {
     func fetchReleases(owner: String, repo: String, token: String) async throws -> [ReleaseResponse]
     func fetchTags(owner: String, repo: String, token: String) async throws -> [FetchTagResponse]
+    func fetchUser(with token: String) async throws -> FetchUserResponse
 }
 
 final class GitHubAPIClient: GitHubAPIClientType {
     private let apiClient: APIClient
-    
+
     init(apiClient: APIClient = .init()) {
         self.apiClient = apiClient
     }
 
     func fetchReleases(owner: String, repo: String, token: String) async throws -> [ReleaseResponse] {
-        let request = try buildReleaseRequest(owner: owner, repo: repo, token: token)
-        return try await apiClient.fetch(using: request)
+        let requestReleasesUrl = try Endpoint.url(forOwner: owner, repo: repo, endpoint: .releases)
+        return try await apiClient.fetch(using: makeGetRequest(url: requestReleasesUrl, token: token))
     }
-    
-    
-    private func buildReleaseRequest(owner: String, repo: String, token: String) throws -> URLRequest {
-        let url = try Endpoint.releases.url(forOwner: owner, repo: repo)
-        
+
+    func fetchTags(owner: String, repo: String, token: String) async throws -> [FetchTagResponse] {
+        let requestReleasesUrl = try Endpoint.url(forOwner: owner, repo: repo, endpoint: .tags)
+        return try await apiClient.fetch(using: makeGetRequest(url: requestReleasesUrl, token: token))
+    }
+
+    func fetchUser(with token: String) async throws -> FetchUserResponse {
+        let userRequestUrl = try Endpoint.urlForUser()
+        return try await apiClient.fetch(using: makeGetRequest(url: userRequestUrl, token: token))
+    }
+
+    private func makeGetRequest(url: URL, token: String) -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
@@ -35,9 +43,4 @@ final class GitHubAPIClient: GitHubAPIClientType {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         return request
     }
-
-    func fetchTags(owner: String, repo: String, token: String) async throws -> [FetchTagResponse] {
-        return [] // TODO: come back to tags
-    }
-    
 }
