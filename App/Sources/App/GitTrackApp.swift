@@ -5,6 +5,7 @@ import SwiftUI
 struct GitTrackApp: App {
     @State private var appState = AppState()
     @State private var personalAccessToken = ""
+    @State private var isShowingError = false
     @State private var isAddingPersonalAccessToken = false
     private let apiClient = GitHubAPIClient()
     
@@ -12,41 +13,19 @@ struct GitTrackApp: App {
         MenuBarExtra("GitTrack", systemImage: "star") {
             Group {
                 VStack {
-                    if !appState.isAuthenticated {
-                        Text("Welcome to GitTrack")
+                    switch appState.authState {
+                    case .idle:
+                        welcomeView
+                    case .authenticated(let username):
+                        Text("Hello, \(username)!")
                             .font(.largeTitle)
-                            
-                        Button("Login to GitHub") {
-                            isAddingPersonalAccessToken.toggle()
-                        }
-                        .popover(isPresented: $isAddingPersonalAccessToken) {
-                            VStack {
-                                Text("Add Personal Access Token")
-                                    .font(.headline)
-                                if let url = URL(string: "https://github.com/settings/personal-access-tokens/new") {
-                                    Link("Generate a Personal Access Token with the 'Public repositories' access or 'Repo scope'.", destination: url)
-                                }
-                                
-                                TextField("Paste your Personal Access Token", text: $personalAccessToken)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .padding()
-                                
-                                Button("Verify Token") {
-                                    Task {
-                                        do {
-                                            let _ = try await apiClient.fetchUser(with: personalAccessToken)
-                                            // save PAT
-                                            // save user
-                                        } catch {
-                                            print(error) // FIXME: handle error with popover state
-                                        }
-                                    }
-                                }
-                                .disabled($personalAccessToken.wrappedValue.isEmpty)
-                            }
                             .padding()
-                        }
-                        .padding()
+                    case .error(let message):
+                        Text("Error: \(message)")
+                            .font(.headline)
+                            .foregroundColor(.red)
+                            .padding()
+                    default: Text("Not implemented")
                     }
                     
                     Spacer()
@@ -58,7 +37,47 @@ struct GitTrackApp: App {
             }
             .padding()
             .frame(minWidth: 300, minHeight: 400)
+            .alert("Failed to verify PAT", isPresented: $isShowingError, actions: {
+                Text("Oh no! Something went wrong.")
+            })
         }
         .menuBarExtraStyle(.window)
+    }
+    
+    @ViewBuilder
+    private var welcomeView: some View {
+        Text("Welcome to GitTrack")
+            .font(.largeTitle)
+            
+        Button("Login to GitHub") {
+            isAddingPersonalAccessToken.toggle()
+        }
+        .popover(isPresented: $isAddingPersonalAccessToken) {
+            VStack {
+                Text("Add Personal Access Token")
+                    .font(.headline)
+                if let url = URL(string: "https://github.com/settings/personal-access-tokens/new") {
+                    Link("Generate a Personal Access Token with the 'Public repositories' access or 'Repo scope'.", destination: url)
+                }
+                
+                TextField("Paste your Personal Access Token", text: $personalAccessToken)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding()
+                
+                Button("Verify Token") {
+                    Task {
+                        do {
+                            try await appState.verifyAuthentication(using: personalAccessToken)
+                        } catch {
+                            isAddingPersonalAccessToken.toggle()
+                            isShowingError.toggle()
+                        }
+                    }
+                }
+                .disabled($personalAccessToken.wrappedValue.isEmpty)
+            }
+            .padding()
+        }
+        .padding()
     }
 }
