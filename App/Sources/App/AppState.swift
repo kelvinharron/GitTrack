@@ -18,11 +18,28 @@ enum AuthenticationState {
 @Observable
 final class AppState {
     private let apiClient: GitHubAPIClient
+    private let keychainService: KeychainService
+    private let userDefaults: UserDefaults
     
     var authState: AuthenticationState = .idle
     
-    init(apiClient: GitHubAPIClient = .init()) {
+    init(
+        apiClient: GitHubAPIClient = .init(),
+        keychainService: KeychainService = .init(),
+        userDefaults: UserDefaults = .standard
+    ) {
         self.apiClient = apiClient
+        self.keychainService = keychainService
+        self.userDefaults = userDefaults
+        
+        do {
+            try keychainService.load()
+            if let username = userDefaults.string(forKey: "username") {
+                authState = .authenticated(username)
+            }
+        } catch {
+            authState = .idle
+        }
     }
     
     func verifyAuthentication(using token: String) async throws {
@@ -30,6 +47,8 @@ final class AppState {
         
         if let username = user.name {
             authState = .authenticated(username)
+            try keychainService.save(GitHubToken(value: token))
+            userDefaults.set(username, forKey: "username")
         } else {
             authState = .error("User not valid")
         }

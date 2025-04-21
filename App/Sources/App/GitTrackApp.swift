@@ -41,6 +41,7 @@ struct GitTrackApp: App {
                 Text("Oh no! Something went wrong.")
             })
         }
+        .environment(appState)
         .menuBarExtraStyle(.window)
     }
     
