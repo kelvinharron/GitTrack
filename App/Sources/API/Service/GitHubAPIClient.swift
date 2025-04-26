@@ -8,9 +8,19 @@
 import Foundation
 
 protocol GitHubAPIClientType {
-    func fetchReleases(owner: String, repo: String, token: String) async throws -> [ReleaseResponse]
-    func fetchTags(owner: String, repo: String, token: String) async throws -> [FetchTagResponse]
-    func fetchUser(with token: String) async throws -> FetchUserResponse
+    func fetchReleases(
+        owner: String,
+        repo: String,
+        token: String
+    ) async throws -> [FetchReleaseResponse]
+    func fetchTags(
+        owner: String,
+        repo: String,
+        token: String
+    ) async throws -> [FetchTagResponse]
+    func fetchUser(
+        with token: String
+    ) async throws -> FetchUserResponse
 }
 
 final class GitHubAPIClient: GitHubAPIClientType {
@@ -20,7 +30,7 @@ final class GitHubAPIClient: GitHubAPIClientType {
         self.apiClient = apiClient
     }
 
-    func fetchReleases(owner: String, repo: String, token: String) async throws -> [ReleaseResponse] {
+    func fetchReleases(owner: String, repo: String, token: String) async throws -> [FetchReleaseResponse] {
         let requestReleasesUrl = try Endpoint.url(forOwner: owner, repo: repo, endpoint: .releases)
         return try await apiClient.fetch(using: makeGetRequest(url: requestReleasesUrl, token: token))
     }

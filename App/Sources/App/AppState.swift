@@ -22,6 +22,7 @@ final class AppState {
     private let userDefaults: UserDefaults
     
     var authState: AuthenticationState = .idle
+    var projects: [Project] = []
     
     init(
         apiClient: GitHubAPIClient = .init(),
@@ -51,6 +52,19 @@ final class AppState {
             userDefaults.set(username, forKey: "username")
         } else {
             authState = .error("User not valid")
+        }
+    }
+    
+    func createProject(with name: String) {
+        let newProject = Project(name: name)
+        projects.append(newProject)
+    }
+    
+    func addRepository(to project: Project, repository: Repository) {
+        if let index = projects.firstIndex(where: { $0.name == project.name }) {
+            projects[index].repositories.append(repository)
+        } else {
+            print("Could not find project to add repository to")
         }
     }
 }

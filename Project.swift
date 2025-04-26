@@ -7,7 +7,7 @@ let project = Project(
             name: "GitTrack",
             destinations: .macOS,
             product: .app,
-            bundleId: "io.tuist.GitTrack",
+            bundleId: "com.kelvinharron.gittrack",
             infoPlist: .extendingDefault(with:
                 ["LSUIElement": "YES"]
             ),

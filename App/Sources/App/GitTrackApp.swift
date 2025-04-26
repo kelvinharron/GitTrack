@@ -7,7 +7,6 @@ struct GitTrackApp: App {
     @State private var personalAccessToken = ""
     @State private var isShowingError = false
     @State private var isAddingPersonalAccessToken = false
-    private let apiClient = GitHubAPIClient()
     
     var body: some Scene {
         MenuBarExtra("GitTrack", systemImage: "star") {
@@ -17,9 +16,7 @@ struct GitTrackApp: App {
                     case .idle:
                         welcomeView
                     case .authenticated(let username):
-                        Text("Hello, \(username)!")
-                            .font(.largeTitle)
-                            .padding()
+                        HomeView(username: username)
                     case .error(let message):
                         Text("Error: \(message)")
                             .font(.headline)
@@ -34,6 +31,7 @@ struct GitTrackApp: App {
                     }
                     .keyboardShortcut("q")
                 }
+                .environment(appState)
             }
             .padding()
             .frame(minWidth: 300, minHeight: 400)
@@ -41,7 +39,6 @@ struct GitTrackApp: App {
                 Text("Oh no! Something went wrong.")
             })
         }
-        .environment(appState)
         .menuBarExtraStyle(.window)
     }
     

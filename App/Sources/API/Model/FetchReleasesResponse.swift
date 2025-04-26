@@ -1,5 +1,5 @@
 //
-//  FetchReleasesResponse.swift
+//  FetchReleaseResponse.swift
 //  GitTrack
 //
 //  Created by Kelvin Harron on 19/04/2025.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ReleaseResponse: Decodable {
+struct FetchReleaseResponse: Decodable {
     let id: Int
     let draft: Bool
     let publishedAt: Date

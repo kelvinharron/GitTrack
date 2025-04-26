@@ -3,7 +3,7 @@ import MarkdownUI
 
 struct ContentView: View {
     @State private var personalAccessToken = ""
-    @State private var releases = [ReleaseResponse]()
+    @State private var releases = [FetchReleaseResponse]()
 
     private let apiClient = GitHubAPIClient()
 

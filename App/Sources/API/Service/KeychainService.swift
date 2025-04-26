@@ -54,11 +54,9 @@ final class KeychainService {
         guard status != errSecItemNotFound else {
             throw KeychainError.itemNotFound
         }
-
         guard status == errSecSuccess else {
             throw KeychainError.unhandledError(status)
         }
-
         guard let data = result as? Data,
               let value = String(data: data, encoding: .utf8)
         else {
