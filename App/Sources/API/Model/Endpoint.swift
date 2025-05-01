@@ -8,9 +8,18 @@
 import Foundation
 
 enum Endpoint: String {
+    case accessToken
     case releases
     case tags
     case user
+    
+    static func urlforToken() throws -> URL {
+        guard let requestUrl = URL(string: "https://github.com/login/oauth/access_token") else {
+            throw APIError.failedToBuildRequest(.accessToken)
+        }
+        
+        return requestUrl
+    }
     
     static func url(forOwner owner: String, repo: String, endpoint: Endpoint) throws -> URL {
         guard let requestUrl = URL(string: "https://api.github.com/repos/\(owner)/\(repo)/" + endpoint.rawValue) else {

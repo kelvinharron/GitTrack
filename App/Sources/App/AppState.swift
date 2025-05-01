@@ -5,6 +5,7 @@
 //  Created by Kelvin Harron on 19/04/2025.
 //
 
+import AuthenticationServices
 import Foundation
 import Observation
 
@@ -32,15 +33,6 @@ final class AppState {
         self.apiClient = apiClient
         self.keychainService = keychainService
         self.userDefaults = userDefaults
-        
-        do {
-            try keychainService.load()
-            if let username = userDefaults.string(forKey: "username") {
-                authState = .authenticated(username)
-            }
-        } catch {
-            authState = .idle
-        }
     }
     
     func verifyAuthentication(using token: String) async throws {

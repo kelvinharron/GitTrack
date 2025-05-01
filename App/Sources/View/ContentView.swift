@@ -1,49 +1,31 @@
-import SwiftUI
 import MarkdownUI
+import SwiftUI
 
 struct ContentView: View {
-    @State private var personalAccessToken = ""
-    @State private var releases = [FetchReleaseResponse]()
+    @State private var isShowingError = false
 
-    private let apiClient = GitHubAPIClient()
+    private let authManager = GitHubAuthManager()
 
     var body: some View {
         VStack {
-            List(releases, id: \.id) { release in
-                HStack {
-                    Text(release.name)
-                        .font(.headline)
-                    Spacer()
-                    Text(release.createdAt.formatted())
-                        .font(.callout)
-                }
-                if let releaseText = release.body {
-                    Markdown(releaseText)
-                }
-            }
-            TextField("Paste your PAT", text: $personalAccessToken)
+            Text("Welcome to GitTrack")
+                .font(.largeTitle)
 
-            Button("Make a request") {
-                Task {
-                    do {
-                        let releases = try await apiClient.fetchReleases(
-                            owner: "tuist",
-                            repo: "tuist",
-                            token: personalAccessToken
-                        )
-                        await MainActor.run {
-                            self.releases = releases
-                        }
-                    } catch {
-                        if let apiError = error as? APIError {
-                            print(apiError.description)
-                        } else {
-                            print(error.localizedDescription)
-                        }
-                    }
-                }
+            Button("Login to GitHub") {
+                onLoginClicked()
             }
-            .disabled(personalAccessToken.isEmpty)
+        }
+    }
+
+    private func onLoginClicked() {
+        authManager.startAuthorization { result in
+            switch result {
+            case .success(let code):
+                print("Authorization successful with code: \(code)")
+            case .failure(let error):
+                print("Authorization failed with error: \(error.localizedDescription)")
+                isShowingError = true
+            }
         }
     }
 }

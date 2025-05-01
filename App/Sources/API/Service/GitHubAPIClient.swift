@@ -8,6 +8,7 @@
 import Foundation
 
 protocol GitHubAPIClientType {
+    func fetchAuthToken(authorizationCode: String) async throws -> FetchAccessTokenResponse
     func fetchReleases(
         owner: String,
         repo: String,
@@ -28,6 +29,19 @@ final class GitHubAPIClient: GitHubAPIClientType {
 
     init(apiClient: APIClient = .init()) {
         self.apiClient = apiClient
+    }
+    
+    func fetchAuthToken(authorizationCode: String) async throws -> FetchAccessTokenResponse {
+        let tokenRequestUrl = try Endpoint.urlforToken()
+        
+        var request = URLRequest(url: tokenRequestUrl)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("Bearer \(authorizationCode)", forHTTPHeaderField: "Authorization")
+        request.httpBody = try JSONEncoder().encode("client_id")
+
+        return try await apiClient.fetch(using: request)
     }
 
     func fetchReleases(owner: String, repo: String, token: String) async throws -> [FetchReleaseResponse] {
