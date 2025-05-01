@@ -39,16 +39,18 @@ final class GitHubAPIClient: GitHubAPIClientType {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("Bearer \(authorizationCode)", forHTTPHeaderField: "Authorization")
-        request.httpBody = try JSONEncoder().encode(
-            FetchAccessTokenRequest(
-                clientId: "",
-                clientSecret: "",
-                code: authorizationCode,
-                redirectUri: "gittrack://callback"
-            )
-        )
+        request.httpBody = try JSONEncoder().encode(buildTokenRequest(from: authorizationCode))
 
         return try await apiClient.fetch(using: request)
+    }
+    
+    private func buildTokenRequest(from authorizationCode: String) -> FetchAccessTokenRequest {
+        FetchAccessTokenRequest(
+            clientId: "",
+            clientSecret: "",
+            code: authorizationCode,
+            redirectUri: "gittrack://callback"
+        )
     }
 
     func fetchReleases(owner: String, repo: String, token: String) async throws -> [FetchReleaseResponse] {
