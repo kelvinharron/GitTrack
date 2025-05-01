@@ -39,7 +39,14 @@ final class GitHubAPIClient: GitHubAPIClientType {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("Bearer \(authorizationCode)", forHTTPHeaderField: "Authorization")
-        request.httpBody = try JSONEncoder().encode("client_id")
+        request.httpBody = try JSONEncoder().encode(
+            FetchAccessTokenRequest(
+                clientId: "",
+                clientSecret: "",
+                code: authorizationCode,
+                redirectUri: "gittrack://callback"
+            )
+        )
 
         return try await apiClient.fetch(using: request)
     }

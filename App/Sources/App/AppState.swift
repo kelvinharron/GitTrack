@@ -35,12 +35,18 @@ final class AppState {
         self.userDefaults = userDefaults
     }
     
-    func verifyAuthentication(using token: String) async throws {
-        let user = try await apiClient.fetchUser(with: token)
+    func exchangeCodeForToken(with code: String) async throws {
+        let fetchAccessTokenResponse = try await apiClient.fetchAuthToken(authorizationCode: code)
+        
+        try await verifyAuthentication(using: fetchAccessTokenResponse)
+    }
+    
+    func verifyAuthentication(using tokenResponse: FetchAccessTokenResponse) async throws {
+        let user = try await apiClient.fetchUser(with: tokenResponse.accessToken)
         
         if let username = user.name {
             authState = .authenticated(username)
-            try keychainService.save(GitHubToken(value: token))
+//            try keychainService.save(GitHubToken(value: t))
             userDefaults.set(username, forKey: "username")
         } else {
             authState = .error("User not valid")

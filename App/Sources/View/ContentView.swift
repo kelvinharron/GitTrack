@@ -2,6 +2,7 @@ import MarkdownUI
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(AppState.self) private var appState: AppState
     @State private var isShowingError = false
 
     private let authManager = GitHubAuthManager()
@@ -21,7 +22,10 @@ struct ContentView: View {
         authManager.startAuthorization { result in
             switch result {
             case .success(let code):
-                print("Authorization successful with code: \(code)")
+                Task {
+                    try? await appState.exchangeCodeForToken(with: code)
+                    print("Authorization successful with code: \(code)")
+                }
             case .failure(let error):
                 print("Authorization failed with error: \(error.localizedDescription)")
                 isShowingError = true
