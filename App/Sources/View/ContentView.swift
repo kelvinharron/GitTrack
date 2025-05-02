@@ -12,22 +12,70 @@ struct ContentView: View {
             Text("Welcome to GitTrack")
                 .font(.largeTitle)
 
-            Button("Login to GitHub") {
-                onLoginClicked()
+            switch appState.authState {
+            case .idle:
+                Button("Login with GitHub") {
+                    onLoginClicked()
+                }
+            case .waitingForCode(let response):
+                VStack(spacing: 8) {
+                    Text("1. Visit GitHub to authorize:")
+
+                    Link("https://github.com/login/device", destination: URL(string: "https://github.com/login/device")!)
+                        .foregroundColor(.blue)
+                        .font(.body)
+
+                    Text("2. Enter this code:")
+                    HStack(spacing: 8) {
+                        Text(response.userCode)
+                            .font(.headline)
+                            .padding(.horizontal)
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(5)
+
+                        Button(action: {
+                            let pasteboard = NSPasteboard.general
+                            pasteboard.clearContents()
+                            pasteboard.setString(response.userCode, forType: .string)
+                        }) {
+                            Image(systemName: "doc.on.doc")
+                            Text("Copy")
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    
+                    .onAppear {
+                        subscribeForAuthentication(from: response)
+                    }
+                }
+            case .authenticated(let username):
+                HomeView(username: username)
+            default:
+                EmptyView()
+            }
+        }
+        .animation(.default, value: appState.authState)
+    }
+
+    private func onLoginClicked() {
+        Task {
+            do {
+                let response = try await authManager.startDeviceAuthorization()
+                appState.authState = .waitingForCode(response)
+            } catch {
+                print("Authentication error: \(error)")
+                isShowingError = true
             }
         }
     }
 
-    private func onLoginClicked() {
-        authManager.startAuthorization { result in
-            switch result {
-            case .success(let code):
-                Task {
-                    try? await appState.exchangeCodeForToken(with: code)
-                    print("Authorization successful with code: \(code)")
-                }
-            case .failure(let error):
-                print("Authorization failed with error: \(error.localizedDescription)")
+    private func subscribeForAuthentication(from response: DeviceResponse) {
+        Task {
+            do {
+                let response = try await authManager.pollForAccessToken(from: response)
+                try await appState.exchangeCodeForToken(with: response)
+            } catch {
+                print("Polling error: \(error)")
                 isShowingError = true
             }
         }

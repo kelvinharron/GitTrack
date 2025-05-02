@@ -9,11 +9,29 @@ import AuthenticationServices
 import Foundation
 import Observation
 
-enum AuthenticationState {
+enum AuthenticationState: Equatable {
     case idle
+    case waitingForCode(DeviceResponse)
     case authenticated(String)
     case error(String)
     case expired
+    
+    static func == (lhs: AuthenticationState, rhs: AuthenticationState) -> Bool {
+        switch (lhs, rhs) {
+        case (.idle, .idle):
+            return true
+        case (.waitingForCode(let lhsResponse), .waitingForCode(let rhsResponse)):
+            return lhsResponse.deviceCode == rhsResponse.deviceCode
+        case (.authenticated(let lhsUsername), .authenticated(let rhsUsername)):
+            return lhsUsername == rhsUsername
+        case (.error(let lhsError), .error(let rhsError)):
+            return lhsError == rhsError
+        case (.expired, .expired):
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 @Observable
@@ -36,13 +54,11 @@ final class AppState {
     }
     
     func exchangeCodeForToken(with code: String) async throws {
-        let fetchAccessTokenResponse = try await apiClient.fetchAuthToken(authorizationCode: code)
-        
-        try await verifyAuthentication(using: fetchAccessTokenResponse)
+        try await verifyAuthentication(using: code)
     }
     
-    func verifyAuthentication(using tokenResponse: FetchAccessTokenResponse) async throws {
-        let user = try await apiClient.fetchUser(with: tokenResponse.accessToken)
+    func verifyAuthentication(using code: String) async throws {
+        let user = try await apiClient.fetchUser(with: code)
         
         if let username = user.name {
             authState = .authenticated(username)
