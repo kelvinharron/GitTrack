@@ -17,16 +17,19 @@ struct HomeView: View {
     @State private var isLoading = false
     @State private var errorMessage: String? = nil
     @State private var selectedProject: Project? = nil
+    @State private var navigationPath = NavigationPath()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             VStack {
                 if let userName = appState.userName {
                     Text("Hello \(userName)")
                 }
                 List {
-                    ForEach(appState.projects, id: \ .self) { project in
-                        NavigationLink(destination: ProjectDetailView(project: project)) {
+                    ForEach(appState.projects, id: \.self) { project in
+                        Button {
+                            navigationPath.append(project)
+                        } label: {
                             VStack(alignment: .leading) {
                                 HStack {
                                     Text(project.name)
@@ -55,8 +58,15 @@ struct HomeView: View {
                     }
                 }
             }
-            Button("Create a Project") {
-                isAddingProject.toggle()
+            .navigationDestination(for: Project.self) { project in
+                ProjectDetailView(project: project)
+            }
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Create a Project") {
+                        isAddingProject.toggle()
+                    }
+                }
             }
         }
         .sheet(isPresented: $isAddingProject) {
