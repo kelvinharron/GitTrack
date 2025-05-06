@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-struct Project: Hashable {
+struct Project: Hashable, Identifiable {
+    var id: String { name }
     let name: String
     var repositories: [Repository]
     
