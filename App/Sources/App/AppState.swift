@@ -12,7 +12,7 @@ import Observation
 enum AuthenticationState: Equatable {
     case idle
     case waitingForCode(DeviceResponse)
-    case authenticated(String)
+    case authenticated
     case error(String)
     case expired
     
@@ -22,8 +22,8 @@ enum AuthenticationState: Equatable {
             return true
         case (.waitingForCode(let lhsResponse), .waitingForCode(let rhsResponse)):
             return lhsResponse.deviceCode == rhsResponse.deviceCode
-        case (.authenticated(let lhsUsername), .authenticated(let rhsUsername)):
-            return lhsUsername == rhsUsername
+        case (.authenticated, .authenticated):
+            return true
         case (.error(let lhsError), .error(let rhsError)):
             return lhsError == rhsError
         case (.expired, .expired):
@@ -42,6 +42,9 @@ final class AppState {
     
     var authState: AuthenticationState = .idle
     var projects: [Project] = []
+    var userName: String? {
+        userDefaults.string(forKey: "username")
+    }
     
     init(
         apiClient: GitHubAPIClient = .init(),
@@ -61,7 +64,7 @@ final class AppState {
         let user = try await apiClient.fetchUser(with: code)
         
         if let username = user.name {
-            authState = .authenticated(username)
+            authState = .authenticated
 //            try keychainService.save(GitHubToken(value: t))
             userDefaults.set(username, forKey: "username")
         } else {

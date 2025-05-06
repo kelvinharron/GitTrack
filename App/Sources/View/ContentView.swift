@@ -48,8 +48,8 @@ struct ContentView: View {
                         subscribeForAuthentication(from: response)
                     }
                 }
-            case .authenticated(let username):
-                HomeView(username: username)
+            case .authenticated:
+                HomeView()
             default:
                 EmptyView()
             }

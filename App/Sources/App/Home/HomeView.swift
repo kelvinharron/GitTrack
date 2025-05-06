@@ -13,16 +13,12 @@ struct HomeView: View {
     @State private var isAddingProject = false
     @State private var newProjectName = ""
 
-    private let username: String
-
-    init(username: String) {
-        self.username = username
-    }
-
     var body: some View {
         NavigationStack {
             VStack {
-                Text("Hello \(username)")
+                if let userName = appState.userName {
+                    Text("Hello \(userName)")
+                }
                 List {
                     ForEach(appState.projects, id: \.self) {
                         Text($0.name)
@@ -47,5 +43,14 @@ struct HomeView: View {
 }
 
 #Preview {
-    HomeView(username: "Steve")
+    let appState = AppState()
+    let project = Project(
+        name: "EHR",
+        repositories: []
+    )
+    
+    
+    
+    HomeView()
+        .environment(appState)
 }
