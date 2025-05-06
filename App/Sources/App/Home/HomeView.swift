@@ -31,12 +31,6 @@ struct HomeView: View {
                                 HStack {
                                     Text(project.name)
                                         .font(.headline)
-                                    Spacer()
-                                    Button("Add Repository") {
-                                        isAddingRepositoryForProject = project
-                                        newRepositoryURL = ""
-                                        errorMessage = nil
-                                    }
                                 }
                                 if !project.repositories.isEmpty {
                                     ForEach(project.repositories, id: \.id) { repo in

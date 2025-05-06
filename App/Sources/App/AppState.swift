@@ -15,7 +15,7 @@ enum AuthenticationState: Equatable {
     case authenticated
     case error(String)
     case expired
-    
+
     static func == (lhs: AuthenticationState, rhs: AuthenticationState) -> Bool {
         switch (lhs, rhs) {
         case (.idle, .idle):
@@ -39,14 +39,13 @@ final class AppState {
     private let apiClient: GitHubAPIClient
     private let keychainService: KeychainService
     private let userDefaults: UserDefaults
-    
+
     var authState: AuthenticationState = .idle
     var projects: [Project] = []
     var userName: String? {
         userDefaults.string(forKey: "username")
     }
-    var githubToken: String? = nil
-    
+
     init(
         apiClient: GitHubAPIClient = .init(),
         keychainService: KeychainService = .init(),
@@ -56,48 +55,45 @@ final class AppState {
         self.keychainService = keychainService
         self.userDefaults = userDefaults
 
-        if let token = try? keychainService.load().value {
-            self.githubToken = token
+        if (try? keychainService.load()) != nil {
             self.authState = .authenticated
         }
     }
-    
+
     func exchangeCodeForToken(with code: String) async throws {
         try await verifyAuthentication(using: code)
     }
-    
+
     func verifyAuthentication(using code: String) async throws {
-        let user = try await apiClient.fetchUser(with: code)
-        
-        if let username = user.name {
-            authState = .authenticated
-            githubToken = code
-            do {
-                try keychainService.save(GitHubToken(value: code))
-            } catch {
-                print("Failed to save token to keychain: \(error)")
+        do {
+            try keychainService.save(GitHubToken(value: code))
+            if let username = try await apiClient.fetchUser().name {
+                userDefaults.set(username, forKey: "username")
+                authState = .authenticated
+            } else {
+                authState = .error("Could not verify user on GitHub")
             }
-            userDefaults.set(username, forKey: "username")
-        } else {
-            authState = .error("User not valid")
+        } catch {
+            print("Failed to save token to keychain: \(error)")
+            authState = .error(error.localizedDescription)
         }
     }
-    
+
     func createProject(with name: String) {
         let newProject = Project(name: name)
         projects.append(newProject)
     }
-    
-    func addRepository(to project: Project, fromGitHubURL urlString: String, token: String? = nil) async {
-        guard let (owner, repo) = parseGitHubURL(urlString), let token = token ?? githubToken else {
+
+    func addRepository(to project: Project, fromGitHubURL urlString: String) async {
+        guard let (owner, repo) = parseGitHubURL(urlString) else {
             print("Invalid GitHub URL or missing token")
             return
         }
         do {
-            let releases = try await apiClient.fetchReleases(owner: owner, repo: repo, token: token)
+            let releases = try await apiClient.fetchReleases(owner: owner, repo: repo)
             let latestTag = releases.first?.tagName
             let repository = Repository(
-                id: releases.first?.id ?? Int.random(in: 10000...99999),
+                id: releases.first?.id ?? Int.random(in: 10000 ... 99999),
                 name: repo,
                 url: URL(string: urlString)!,
                 latestTag: latestTag
